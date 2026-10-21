@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PS KART | Admin Dashboard</title>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<style>
+:root {
+    --pink: #f32f80;
+    --purple: #7529a5;
+    --bg: #fff6fa;
+    --white: #fff;
+    --dark: #292331;
+    --muted: #817585;
+    --border: #f0e3ed;
+    --green: #16844a;
+    --red: #dc3545;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    color: var(--dark);
+}
+
+button, input, select, textarea {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* LOGIN */
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #ffe0ee, #eee1ff);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 390px;
+    background: white;
+    padding: 30px;
+    border-radius: 22px;
+    box-shadow: 0 15px 45px #55205d20;
+}
+
+.logo {
+    color: var(--pink);
+    font-size: 32px;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.logo span {
+    color: var(--purple);
+}
+
+.login-card h2 {
+    text-align: center;
+    margin: 10px 0 22px;
+}
+
+.field {
+    margin-bottom: 15px;
+}
+
+.field label {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 7px;
+}
+
+.field input,
+.field select,
+.field textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e7dce6;
+    border-radius: 10px;
+    background: #fffafd;
+    outline-color: var(--pink);
+}
+
+.field textarea {
+    min-height: 75px;
+    resize: vertical;
+}
+
+.primary {
+    background: var(--pink);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 17px;
+    font-weight: bold;
+}
+
+.primary:hover {
+    background: var(--purple);
+}
+
+.full {
+    width: 100%;
+}
+
+.message {
+    font-size: 13px;
+    margin-top: 12px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+
+/* DASHBOARD */
+.topbar {
+    background: white;
+    padding: 15px 4%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+}
+
+.topbar .logo {
+    margin: 0;
+    font-size: 25px;
+}
+
+.logout {
+    background: #ffe6f0;
+    color: #c51f68;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 9px;
+    font-weight: bold;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: calc(100vh - 65px);
+}
+
+.sidebar {
+    background: white;
+    border-right: 1px solid var(--border);
+    padding: 22px 13px;
+}
+
+.sidebar h3 {
+    padding: 0 10px 20px;
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+}
+
+.nav-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    padding: 13px 12px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    color: #5c5062;
+    font-weight: bold;
+}
+
+.nav-btn.active,
+.nav-btn:hover {
+    background: #ffe6f1;
+    color: var(--pink);
+}
+
+.main {
+    padding: 25px;
+    min-width: 0;
+}
+
+.page-title {
+    font-size: 27px;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 22px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.stat {
+    padding: 20px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 15px;
+}
+
+.stat .icon {
+    font-size: 25px;
+}
+
+.stat p {
+    color: var(--muted);
+    font-size: 13px;
+    margin: 10px 0 6px;
+}
+
+.stat h2 {
+    font-size: 27px;
+    color: var(--purple);
+}
+
+.panel {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 17px;
+}
+
+.panel-head h2 {
+    font-size: 19px;
+}
+
+.grid-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 15px;
+}
+
+.span-2 {
+    grid-column: 1 / -1;
+}
+
+.note {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 10px 0;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 620px;
+}
+
+th, td {
+    padding: 13px 10px;
+    text-align: left;
+    border-bottom: 1px solid #f0e7ef;
+    font-size: 13px;
+}
+
+th {
+    color: var(--muted);
+    background: #fff8fc;
+}
+
+.product-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 9px;
+    background: #fff0f6;
+}
+
+.badge {
+    display: inline-block;
+    padding: 6px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+    background: #eee1ff;
+    color: var(--purple);
+}
+
+.status-pending { background: #fff0ce; color: #885b00; }
+.status-confirmed { background: #dff5e6; color: #176b39; }
+.status-shipped { background: #dcecff; color: #17539b; }
+.status-delivered { background: #dff5e6; color: #176b39; }
+.status-cancelled { background: #ffe1e3; color: #a3202d; }
+
+.small-btn {
+    padding: 7px 10px;
+    border: none;
+    border-radius: 7px;
+    background: #ffe6f0;
+    color: #c51f68;
+    font-size: 12px;
+    font-weight: bold;
+    margin: 2px;
+}
+
+.delete-btn {
+    background: #ffe5e5;
+    color: var(--red);
+}
+
+.empty {
+    text-align: center;
+    padding: 35px 15px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+@media(max-width: 750px) {
+    .layout {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        padding: 10px;
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar h3 {
+        display: none;
+    }
+
+    .nav-btn {
+        width: auto;
+        flex-shrink: 0;
+        margin: 0;
+    }
+
+    .main {
+        padding: 15px;
+    }
+
+    .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .stat {
+        padding: 15px;
+    }
+
+    .stat h2 {
+        font-size: 23px;
+    }
+
+    .grid-form {
+        grid-template-columns: 1fr;
+    }
+
+    .span-2 {
+        grid-column: auto;
+    }
+
+    .page-title {
+        font-size: 23px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<section id="loginPage" class="login-page">
+    <form class="login-card" id="loginForm">
+        <div class="logo">PS <span>KART</span></div>
+        <h2>Admin Login</h2>
+
+        <div class="field">
+            <label for="adminEmail">Admin Email</label>
+            <input id="adminEmail" type="email" placeholder="admin@pskart.com" required>
+        </div>
+
+        <div class="field">
+            <label for="adminPassword">Admin Password</label>
+            <input id="adminPassword" type="password" placeholder="Enter password" required>
+        </div>
+
+        <button class="primary full" type="submit">
+            Login to Dashboard
+        </button>
+
+        <div id="loginMessage" class="message"></div>
+    </form>
+</section>
+
+<!-- ADMIN DASHBOARD -->
+<section id="dashboard" class="hidden">
+
+    <header class="topbar">
+        <div class="logo">PS <span>KART</span></div>
+        <button class="logout" onclick="logout()">Logout ↗</button>
+    </header>
+
+    <div class="layout">
+
+        <aside class="sidebar">
+            <h3>Store Management</h3>
+
+            <button class="nav-btn active" onclick="showPage('overview', this)">
+                📊 Dashboard
+            </button>
+
+            <button class="nav-btn" onclick="showPage('products', this)">
+                🛍️ Products
+            </button>
+
+            <button class="nav-btn" onclick="showPage('orders', this)">
+                📦 Orders
+            </button>
+        </aside>
+
+        <main class="main">
+
+            <!-- OVERVIEW -->
+            <section id="overviewPage">
+                <h1 class="page-title">Dashboard Overview</h1>
+                <p class="subtitle">Welcome to your PS KART store management panel.</p>
+
+                <div class="stats">
+                    <div class="stat">
+                        <div class="icon">🛍️</div>
+                        <p>Total Products</p>
+                        <h2 id="statProducts">0</h2>
+                    </div>
+
+                    <div class="stat">
+                        <div class="icon">📦</div>
+                        <p>Total Orders</p>
+                        <h2 id="statOrders">0</h2>
+                    </div>
+
+                    <div class="stat">
+                        <div class="icon">💰</div>
+                        <p>Total Order Value</p>
+                        <h2 id="statRevenue">₹0</h2>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <h2>Quick Actions</h2>
+                    </div>
+
+                    <button class="primary" onclick="showPageById('products')">
+                        + Add Product
+                    </button>
+
+                    <button class="primary" onclick="showPageById('orders')">
+                        View Orders
+                    </button>
+
+                    <p class="note">
+                        Statistics update live from your Firebase database.
+                    </p>
+                </div>
+            </section>
+
+            <!-- PRODUCTS -->
+            <section id="productsPage" class="hidden">
+                <h1 class="page-title">Product Management</h1>
+                <p class="subtitle">Add and manage your store's products in Firebase.</p>
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <h2 id="productFormTitle">➕ Add New Product</h2>
+                    </div>
+
+                    <form id="productForm">
+                        <input type="hidden" id="editProductId">
+
+                        <div class="grid-form">
+                            <div class="field">
+                                <label for="productName">Product Name *</label>
+                                <input id="productName" maxlength="100" required>
+                            </div>
+
+                            <div class="field">
+                                <label for="productCategory">Category *</label>
+                                <select id="productCategory" required>
+                                    <option value="">Select Category</option>
+                                    <option>Fashion</option>
+                                    <option>Electronics</option>
+                                    <option>Footwear</option>
+                                    <option>Bags</option>
+                                    <option>Accessories</option>
+                                    <option>Home</option>
+                                    <option>Beauty</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label for="productPrice">Selling Price (₹) *</label>
+                                <input id="productPrice" type="number" min="1" max="10000000" step="1" required>
+                            </div>
+
+                            <div class="field">
+                                <label for="productOldPrice">MRP (₹)</label>
+                                <input id="productOldPrice" type="number" min="0" max="10000000" step="1">
+                            </div>
+
+                            <div class="field">
+                                <label for="productStock">Stock Quantity *</label>
+                                <input id="productStock" type="number" min="0" max="1000000" step="1" required>
+                            </div>
+
+                            <div class="field">
+                                <label for="productImage">Image URL</label>
+                                <input id="productImage" type="url" placeholder="https://example.com/image.jpg">
+                            </div>
+
+                            <div class="field span-2">
+                                <label for="productDescription">Description</label>
+                                <textarea id="productDescription" maxlength="1000" placeholder="Product details..."></textarea>
+                            </div>
+                        </div>
+
+                        <button class="primary" type="submit">Save Product</button>
+                        <button class="small-btn hidden" type="button" id="cancelEdit" onclick="resetProductForm()">Cancel Edit</button>
+                    </form>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <h2>All Products</h2>
+                        <span class="badge" id="productCount">0 Products</span>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ORDERS -->
+            <section id="ordersPage" class="hidden">
+                <h1 class="page-title">Customer Orders</h1>
+                <p class="subtitle">View live customer orders and update their status.</p>
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <h2>All Orders</h2>
+                        <span class="badge" id="orderCount">0 Orders</span>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Update</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orderTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</section>
+
+<script>
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjcYdEcGig_YfdwEHsdMO8Isg9Ar4-pxQ",
+    authDomain: "ps-kart.firebaseapp.com",
+    projectId: "ps-kart",
+    storageBucket: "ps-kart.firebasestorage.app",
+    messagingSenderId: "1080353923873",
+    appId: "1:1080353923873:web:098ce9f40c41a534ef1460"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // Admin Login Handler
+  document.getElementById("loginForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      const email = document.getElementById("adminEmail").value.trim();
+      const password = document.getElementById("adminPassword").value;
+
+      document.getElementById("loginMessage").textContent = "";
+
+      auth.signInWithEmailAndPassword(email, password)
+          .then(() => {
+              document.getElementById("loginPage").classList.add("hidden");
+              document.getElementById("dashboard").classList.remove("hidden");
+              loadFirestoreData();
+          })
+          .catch((error) => {
+              let errorMsg = "Incorrect email or password. Please try again.";
+              if (error.code === 'auth/too-many-requests') {
+                  errorMsg = "Access blocked due to failed attempts. Try again later.";
+              }
+              document.getElementById("loginMessage").innerHTML = 
+                  `<span style="color:red; font-weight: bold;">${errorMsg}</span>`;
+          });
+  });
+
+  function logout() {
+      auth.signOut().then(() => {
+          document.getElementById("dashboard").classList.add("hidden");
+          document.getElementById("loginPage").classList.remove("hidden");
+          document.getElementById("loginForm").reset();
+          document.getElementById("loginMessage").innerHTML = "";
+      });
+  }
+
+  let products = [];
+  let orders = [];
+
+  function loadFirestoreData() {
+      // Load Products
+      db.collection("products").onSnapshot((snapshot) => {
+          products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          renderProducts();
+          renderOverview();
+      });
+
+      // Load Orders
+      db.collection("orders").onSnapshot((snapshot) => {
+          orders = snapshot.docs.map(doc => ({ docDocId: doc.id, ...doc.data() }));
+          renderOrders();
+          renderOverview();
+      });
+  }
+
+  // Add/Edit Product
+  document.getElementById("productForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      const editId = document.getElementById("editProductId").value;
+
+      const product = {
+          name: document.getElementById("productName").value.trim(),
+          category: document.getElementById("productCategory").value,
+          price: Number(document.getElementById("productPrice").value),
+          oldPrice: Number(document.getElementById("productOldPrice").value || 0),
+          stock: Number(document.getElementById("productStock").value),
+          image: document.getElementById("productImage").value.trim(),
+          description: document.getElementById("productDescription").value.trim()
+      };
+
+      if (!product.name || !product.category || !Number.isFinite(product.price) || product.price <= 0) {
+          alert("Please check product details.");
+          return;
+      }
+
+      if (editId) {
+          db.collection("products").doc(editId).update(product).then(() => {
+              resetProductForm();
+              alert("Product updated successfully!");
+          });
+      } else {
+          db.collection("products").add(product).then(() => {
+              resetProductForm();
+              alert("Product added successfully!");
+          });
+      }
+  });
+
+  function deleteProduct(id) {
+      if (!confirm("Delete this product?")) return;
+      db.collection("products").doc(id).delete();
+  }
+
+  // Exact Fix for Live Status Update
+  function updateOrderStatus(docDocId, status) {
+      db.collection("orders").doc(docDocId).update({ status: status })
+        .then(() => {
+            console.log("Status updated successfully to " + status);
+        })
+        .catch((error) => {
+            alert("Error updating status: " + error.message);
+        });
+  }
+
+  const money = value => "₹" + Number(value || 0).toLocaleString("en-IN");
+  
+  function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[char]));
+  }
+
+  function renderProducts() {
+      document.getElementById("productCount").textContent = products.length + " Products";
+      const table = document.getElementById("productTable");
+      if (!products.length) {
+          table.innerHTML = `<tr><td colspan="5" class="empty">No products yet. Add your first product above.</td></tr>`;
+          return;
+      }
+      table.innerHTML = products.map(p => `
+          <tr>
+              <td><img class="product-img" src="${escapeHTML(p.image || "https://placehold.co/100x100?text=Product")}" onerror="this.src='https://placehold.co/100x100?text=Product'"></td>
+              <td><strong>${escapeHTML(p.name)}</strong><br><span class="note">${escapeHTML(p.category)}</span></td>
+              <td>${money(p.price)}</td>
+              <td>${p.stock}</td>
+              <td>
+                  <button class="small-btn" onclick="editProduct('${escapeHTML(p.id)}')">Edit</button>
+                  <button class="small-btn delete-btn" onclick="deleteProduct('${escapeHTML(p.id)}')">Delete</button>
+              </td>
+          </tr>
+      `).join("");
+  }
+
+  function editProduct(id) {
+      const p = products.find(item => item.id === id);
+      if (!p) return;
+      document.getElementById("editProductId").value = p.id;
+      document.getElementById("productName").value = p.name;
+      document.getElementById("productCategory").value = p.category;
+      document.getElementById("productPrice").value = p.price;
+      document.getElementById("productOldPrice").value = p.oldPrice;
+      document.getElementById("productStock").value = p.stock;
+      document.getElementById("productImage").value = p.image;
+      document.getElementById("productDescription").value = p.description;
+      document.getElementById("productFormTitle").textContent = "✏️ Edit Product";
+      document.getElementById("cancelEdit").classList.remove("hidden");
+      showPageById("products");
+  }
+
+  function resetProductForm() {
+      document.getElementById("productForm").reset();
+      document.getElementById("editProductId").value = "";
+      document.getElementById("productFormTitle").textContent = "➕ Add New Product";
+      document.getElementById("cancelEdit").classList.add("hidden");
+  }
+
+  function renderOrders() {
+      document.getElementById("orderCount").textContent = orders.length + " Orders";
+      const table = document.getElementById("orderTable");
+      if (!orders.length) {
+          table.innerHTML = `<tr><td colspan="6" class="empty">No customer orders yet.</td></tr>`;
+          return;
+      }
+      table.innerHTML = orders.map(order => {
+          const status = order.status || "Pending";
+          const itemNames = Array.isArray(order.items) ? order.items.map(i => escapeHTML(i.name) + " × " + Number(i.quantity || 1)).join("<br>") : "Order";
+          return `
+              <tr>
+                  <td>${escapeHTML(order.id)}</td>
+                  <td>${escapeHTML(order.customer || order.name)}<br><span class="note">${escapeHTML(order.phone)}</span></td>
+                  <td>${itemNames}</td>
+                  <td>${money(order.total)}</td>
+                  <td><span class="badge status-${status.toLowerCase()}">${status}</span></td>
+                  <td>
+                      <select onchange="updateOrderStatus('${escapeHTML(order.docDocId)}', this.value)">
+                          ${["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"].map(s => `<option value="${s}" ${s === status ? "selected" : ""}>${s}</option>`).join("")}
+                      </select>
+                  </td>
+              </tr>
+          `;
+      }).join("");
+  }
+
+  function renderOverview() {
+      document.getElementById("statProducts").textContent = products.length;
+      document.getElementById("statOrders").textContent = orders.length;
+      const total = orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+      document.getElementById("statRevenue").textContent = money(total);
+  }
+
+  function showPage(page, button) {
+      ["overview", "products", "orders"].forEach(name => {
+          document.getElementById(name + "Page").classList.toggle("hidden", name !== page);
+      });
+      document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.remove("active"));
+      if (button) button.classList.add("active");
+  }
+
+  function showPageById(page) {
+      const button = [...document.querySelectorAll(".nav-btn")].find(btn => btn.getAttribute("onclick").includes("'" + page + "'"));
+      showPage(page, button);
+  }
+</script>
+
+</body>
+</html>
