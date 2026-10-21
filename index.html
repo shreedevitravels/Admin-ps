@@ -518,6 +518,7 @@ th {
 
                     <form id="productForm">
                         <input type="hidden" id="editProductId">
+                        <input type="hidden" id="productImageExisting">
 
                         <div class="grid-form">
                             <div class="field">
@@ -556,8 +557,8 @@ th {
                             </div>
 
                             <div class="field">
-                                <label for="productImage">Image URL</label>
-                                <input id="productImage" type="url" placeholder="https://example.com/image.jpg">
+                                <label for="productImageFile">Upload Product Image</label>
+                                <input id="productImageFile" type="file" accept="image/*">
                             </div>
 
                             <div class="field span-2">
@@ -694,10 +695,30 @@ th {
       });
   }
 
-  // Add/Edit Product
-  document.getElementById("productForm").addEventListener("submit", function(event) {
+  // Convert uploaded image file to Base64 string
+  function getBase64(file) {
+      return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = error => reject(error);
+      });
+  }
+
+  // Add/Edit Product Form Handler with File Upload support
+  document.getElementById("productForm").addEventListener("submit", async function(event) {
       event.preventDefault();
       const editId = document.getElementById("editProductId").value;
+      const fileInput = document.getElementById("productImageFile");
+      
+      let imageUrl = document.getElementById("productImageExisting").value;
+      if (fileInput.files && fileInput.files[0]) {
+          try {
+              imageUrl = await getBase64(fileInput.files[0]);
+          } catch (err) {
+              console.error("Error reading image file", err);
+          }
+      }
 
       const product = {
           name: document.getElementById("productName").value.trim(),
@@ -705,7 +726,7 @@ th {
           price: Number(document.getElementById("productPrice").value),
           oldPrice: Number(document.getElementById("productOldPrice").value || 0),
           stock: Number(document.getElementById("productStock").value),
-          image: document.getElementById("productImage").value.trim(),
+          image: imageUrl || "https://placehold.co/100x100?text=Product",
           description: document.getElementById("productDescription").value.trim()
       };
 
@@ -732,7 +753,7 @@ th {
       db.collection("products").doc(id).delete();
   }
 
-  // Exact Fix for Live Status Update
+  // Live Status Update for Orders
   function updateOrderStatus(docDocId, status) {
       db.collection("orders").doc(docDocId).update({ status: status })
         .then(() => {
@@ -781,7 +802,7 @@ th {
       document.getElementById("productPrice").value = p.price;
       document.getElementById("productOldPrice").value = p.oldPrice;
       document.getElementById("productStock").value = p.stock;
-      document.getElementById("productImage").value = p.image;
+      document.getElementById("productImageExisting").value = p.image || "";
       document.getElementById("productDescription").value = p.description;
       document.getElementById("productFormTitle").textContent = "✏️ Edit Product";
       document.getElementById("cancelEdit").classList.remove("hidden");
@@ -791,6 +812,7 @@ th {
   function resetProductForm() {
       document.getElementById("productForm").reset();
       document.getElementById("editProductId").value = "";
+      document.getElementById("productImageExisting").value = "";
       document.getElementById("productFormTitle").textContent = "➕ Add New Product";
       document.getElementById("cancelEdit").classList.add("hidden");
   }
