@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PS KART | Admin Dashboard</title>
 
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
 <style>
 :root {
     --pink: #f32f80;
@@ -43,7 +48,6 @@ button {
 }
 
 /* LOGIN */
-
 .login-page {
     min-height: 100vh;
     display: flex;
@@ -76,14 +80,7 @@ button {
 
 .login-card h2 {
     text-align: center;
-    margin: 20px 0 7px;
-}
-
-.login-card p {
-    text-align: center;
-    color: var(--muted);
-    font-size: 13px;
-    margin-bottom: 22px;
+    margin: 10px 0 22px;
 }
 
 .field {
@@ -135,10 +132,10 @@ button {
     margin-top: 12px;
     line-height: 1.6;
     overflow-wrap: anywhere;
+    text-align: center;
 }
 
 /* DASHBOARD */
-
 .topbar {
     background: white;
     padding: 15px 4%;
@@ -326,30 +323,11 @@ th {
     color: var(--purple);
 }
 
-.status-pending {
-    background: #fff0ce;
-    color: #885b00;
-}
-
-.status-confirmed {
-    background: #dff5e6;
-    color: #176b39;
-}
-
-.status-shipped {
-    background: #dcecff;
-    color: #17539b;
-}
-
-.status-delivered {
-    background: #dff5e6;
-    color: #176b39;
-}
-
-.status-cancelled {
-    background: #ffe1e3;
-    color: #a3202d;
-}
+.status-pending { background: #fff0ce; color: #885b00; }
+.status-confirmed { background: #dff5e6; color: #176b39; }
+.status-shipped { background: #dcecff; color: #17539b; }
+.status-delivered { background: #dff5e6; color: #176b39; }
+.status-cancelled { background: #ffe1e3; color: #a3202d; }
 
 .small-btn {
     padding: 7px 10px;
@@ -372,17 +350,6 @@ th {
     padding: 35px 15px;
     color: var(--muted);
     font-size: 14px;
-}
-
-.warning {
-    background: #fff4d9;
-    border: 1px solid #f0d797;
-    color: #765500;
-    padding: 13px;
-    border-radius: 10px;
-    font-size: 13px;
-    line-height: 1.7;
-    margin-bottom: 20px;
 }
 
 @media(max-width: 750px) {
@@ -443,32 +410,24 @@ th {
 
 <body>
 
-<!-- DEMO LOGIN -->
+<!-- LOGIN -->
 <section id="loginPage" class="login-page">
     <form class="login-card" id="loginForm">
         <div class="logo">PS <span>KART</span></div>
         <h2>Admin Login</h2>
-        <p>Manage your shopping store</p>
 
-        <div class="warning">
-            Demo mode only. This login is not secure and does not
-            protect real customer information.
+        <div class="field">
+            <label for="adminEmail">Admin Email</label>
+            <input id="adminEmail" type="email" placeholder="admin@pskart.com" required>
         </div>
 
         <div class="field">
-            <label for="adminEmail">Demo Email</label>
-            <input id="adminEmail" type="email"
-                placeholder="admin@example.com" required>
-        </div>
-
-        <div class="field">
-            <label for="adminPassword">Demo Password</label>
-            <input id="adminPassword" type="password"
-                placeholder="Enter demo password" required>
+            <label for="adminPassword">Admin Password</label>
+            <input id="adminPassword" type="password" placeholder="Enter password" required>
         </div>
 
         <button class="primary full" type="submit">
-            Open Demo Dashboard
+            Login to Dashboard
         </button>
 
         <div id="loginMessage" class="message"></div>
@@ -488,39 +447,25 @@ th {
         <aside class="sidebar">
             <h3>Store Management</h3>
 
-            <button class="nav-btn active"
-                onclick="showPage('overview', this)">
+            <button class="nav-btn active" onclick="showPage('overview', this)">
                 📊 Dashboard
             </button>
 
-            <button class="nav-btn"
-                onclick="showPage('products', this)">
+            <button class="nav-btn" onclick="showPage('products', this)">
                 🛍️ Products
             </button>
 
-            <button class="nav-btn"
-                onclick="showPage('orders', this)">
+            <button class="nav-btn" onclick="showPage('orders', this)">
                 📦 Orders
             </button>
         </aside>
 
         <main class="main">
 
-            <div class="warning">
-                <strong>DEMO MODE:</strong>
-                Data is saved only in this browser.
-                Products and orders are not connected to index.html
-                or a real database. Do not use this demo to store
-                real customer details.
-            </div>
-
             <!-- OVERVIEW -->
             <section id="overviewPage">
-
                 <h1 class="page-title">Dashboard Overview</h1>
-                <p class="subtitle">
-                    Welcome to your PS KART store management panel.
-                </p>
+                <p class="subtitle">Welcome to your PS KART store management panel.</p>
 
                 <div class="stats">
                     <div class="stat">
@@ -537,7 +482,7 @@ th {
 
                     <div class="stat">
                         <div class="icon">💰</div>
-                        <p>Demo Order Value</p>
+                        <p>Total Order Value</p>
                         <h2 id="statRevenue">₹0</h2>
                     </div>
                 </div>
@@ -547,31 +492,24 @@ th {
                         <h2>Quick Actions</h2>
                     </div>
 
-                    <button class="primary"
-                        onclick="showPageById('products')">
+                    <button class="primary" onclick="showPageById('products')">
                         + Add Product
                     </button>
 
-                    <button class="primary"
-                        onclick="showPageById('orders')">
+                    <button class="primary" onclick="showPageById('orders')">
                         View Orders
                     </button>
 
                     <p class="note">
-                        Statistics are based only on demo data saved
-                        in this browser.
+                        Statistics update live from your Firebase database.
                     </p>
                 </div>
-
             </section>
 
             <!-- PRODUCTS -->
             <section id="productsPage" class="hidden">
-
                 <h1 class="page-title">Product Management</h1>
-                <p class="subtitle">
-                    Add and manage your store's demo products.
-                </p>
+                <p class="subtitle">Add and manage your store's products in Firebase.</p>
 
                 <div class="panel">
                     <div class="panel-head">
@@ -582,11 +520,9 @@ th {
                         <input type="hidden" id="editProductId">
 
                         <div class="grid-form">
-
                             <div class="field">
                                 <label for="productName">Product Name *</label>
-                                <input id="productName"
-                                    maxlength="100" required>
+                                <input id="productName" maxlength="100" required>
                             </div>
 
                             <div class="field">
@@ -606,56 +542,33 @@ th {
 
                             <div class="field">
                                 <label for="productPrice">Selling Price (₹) *</label>
-                                <input id="productPrice"
-                                    type="number" min="1"
-                                    max="10000000" step="1" required>
+                                <input id="productPrice" type="number" min="1" max="10000000" step="1" required>
                             </div>
 
                             <div class="field">
                                 <label for="productOldPrice">MRP (₹)</label>
-                                <input id="productOldPrice"
-                                    type="number" min="0"
-                                    max="10000000" step="1">
+                                <input id="productOldPrice" type="number" min="0" max="10000000" step="1">
                             </div>
 
                             <div class="field">
                                 <label for="productStock">Stock Quantity *</label>
-                                <input id="productStock"
-                                    type="number" min="0"
-                                    max="1000000" step="1" required>
+                                <input id="productStock" type="number" min="0" max="1000000" step="1" required>
                             </div>
 
                             <div class="field">
                                 <label for="productImage">Image URL</label>
-                                <input id="productImage"
-                                    type="url"
-                                    placeholder="https://example.com/image.jpg">
+                                <input id="productImage" type="url" placeholder="https://example.com/image.jpg">
                             </div>
 
                             <div class="field span-2">
                                 <label for="productDescription">Description</label>
-                                <textarea id="productDescription"
-                                    maxlength="1000"
-                                    placeholder="Product details..."></textarea>
+                                <textarea id="productDescription" maxlength="1000" placeholder="Product details..."></textarea>
                             </div>
-
                         </div>
 
-                        <button class="primary" type="submit">
-                            Save Product
-                        </button>
-
-                        <button class="small-btn hidden"
-                            type="button" id="cancelEdit"
-                            onclick="resetProductForm()">
-                            Cancel Edit
-                        </button>
+                        <button class="primary" type="submit">Save Product</button>
+                        <button class="small-btn hidden" type="button" id="cancelEdit" onclick="resetProductForm()">Cancel Edit</button>
                     </form>
-
-                    <p class="note">
-                        Demo only: image URLs are used instead of uploading
-                        image files. Firebase Storage can be connected later.
-                    </p>
                 </div>
 
                 <div class="panel">
@@ -679,16 +592,12 @@ th {
                         </table>
                     </div>
                 </div>
-
             </section>
 
             <!-- ORDERS -->
             <section id="ordersPage" class="hidden">
-
                 <h1 class="page-title">Customer Orders</h1>
-                <p class="subtitle">
-                    View demo orders and update their status.
-                </p>
+                <p class="subtitle">View live customer orders and update their status.</p>
 
                 <div class="panel">
                     <div class="panel-head">
@@ -711,14 +620,7 @@ th {
                             <tbody id="orderTable"></tbody>
                         </table>
                     </div>
-
-                    <p class="note">
-                        No real customer orders will appear here until
-                        the customer website and this admin panel are
-                        connected to the same Firebase database.
-                    </p>
                 </div>
-
             </section>
 
         </main>
@@ -726,324 +628,219 @@ th {
 </section>
 
 <script>
-/*
- * DEMO ONLY.
- *
- * This browser-based panel is NOT a secure admin system.
- * Never use a frontend password or localStorage as real authentication.
- *
- * Production version should use Firebase Authentication,
- * Firestore Security Rules and Firebase Storage.
- */
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjcYdEcGig_YfdwEHsdMO8Isg9Ar4-pxQ",
+    authDomain: "ps-kart.firebaseapp.com",
+    projectId: "ps-kart",
+    storageBucket: "ps-kart.firebasestorage.app",
+    messagingSenderId: "1080353923873",
+    appId: "1:1080353923873:web:098ce9f40c41a534ef1460"
+  };
 
-const DEMO_EMAIL = "admin@pskart.demo";
-const DEMO_PASSWORD = "Demo123!";
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-const PRODUCT_KEY = "pskart_demo_products_v1";
-const ORDER_KEY = "pskart_demo_orders_v1";
+  // Admin Login Handler
+  document.getElementById("loginForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      const email = document.getElementById("adminEmail").value.trim();
+      const password = document.getElementById("adminPassword").value;
 
-const money = value =>
-    "₹" + Number(value || 0).toLocaleString("en-IN");
+      document.getElementById("loginMessage").textContent = "";
 
-function escapeHTML(value) {
-    return String(value ?? "").replace(/[&<>"']/g, char => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-    }[char]));
-}
+      auth.signInWithEmailAndPassword(email, password)
+          .then(() => {
+              document.getElementById("loginPage").classList.add("hidden");
+              document.getElementById("dashboard").classList.remove("hidden");
+              loadFirestoreData();
+          })
+          .catch((error) => {
+              let errorMsg = "Incorrect email or password. Please try again.";
+              if (error.code === 'auth/too-many-requests') {
+                  errorMsg = "Access blocked due to failed attempts. Try again later.";
+              }
+              document.getElementById("loginMessage").innerHTML = 
+                  `<span style="color:red; font-weight: bold;">${errorMsg}</span>`;
+          });
+  });
 
-function loadData(key) {
-    try {
-        const value = JSON.parse(localStorage.getItem(key) || "[]");
-        return Array.isArray(value) ? value : [];
-    } catch {
-        return [];
-    }
-}
+  function logout() {
+      auth.signOut().then(() => {
+          document.getElementById("dashboard").classList.add("hidden");
+          document.getElementById("loginPage").classList.remove("hidden");
+          document.getElementById("loginForm").reset();
+          document.getElementById("loginMessage").innerHTML = "";
+      });
+  }
 
-function saveData(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
-}
+  let products = [];
+  let orders = [];
 
-let products = loadData(PRODUCT_KEY);
-let orders = loadData(ORDER_KEY);
+  function loadFirestoreData() {
+      // Load Products
+      db.collection("products").onSnapshot((snapshot) => {
+          products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          renderProducts();
+          renderOverview();
+      });
 
-document.getElementById("loginForm")
-.addEventListener("submit", function(event) {
-    event.preventDefault();
+      // Load Orders
+      db.collection("orders").onSnapshot((snapshot) => {
+          orders = snapshot.docs.map(doc => ({ docDocId: doc.id, ...doc.data() }));
+          renderOrders();
+          renderOverview();
+      });
+  }
 
-    const email = document.getElementById("adminEmail")
-        .value.trim();
+  // Add/Edit Product
+  document.getElementById("productForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      const editId = document.getElementById("editProductId").value;
 
-    const password = document.getElementById("adminPassword")
-        .value;
+      const product = {
+          name: document.getElementById("productName").value.trim(),
+          category: document.getElementById("productCategory").value,
+          price: Number(document.getElementById("productPrice").value),
+          oldPrice: Number(document.getElementById("productOldPrice").value || 0),
+          stock: Number(document.getElementById("productStock").value),
+          image: document.getElementById("productImage").value.trim(),
+          description: document.getElementById("productDescription").value.trim()
+      };
 
-    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-        document.getElementById("loginPage").classList.add("hidden");
-        document.getElementById("dashboard").classList.remove("hidden");
+      if (!product.name || !product.category || !Number.isFinite(product.price) || product.price <= 0) {
+          alert("Please check product details.");
+          return;
+      }
 
-        renderAll();
-    } else {
-        document.getElementById("loginMessage").textContent =
-            "Demo login failed. Use the demo credentials shown below.";
+      if (editId) {
+          db.collection("products").doc(editId).update(product).then(() => {
+              resetProductForm();
+              alert("Product updated successfully!");
+          });
+      } else {
+          db.collection("products").add(product).then(() => {
+              resetProductForm();
+              alert("Product added successfully!");
+          });
+      }
+  });
 
-        document.getElementById("loginMessage").innerHTML =
-            "Demo Email: <b>admin@pskart.demo</b><br>" +
-            "Demo Password: <b>Demo123!</b>";
-    }
-});
+  function deleteProduct(id) {
+      if (!confirm("Delete this product?")) return;
+      db.collection("products").doc(id).delete();
+  }
 
-function logout() {
-    document.getElementById("dashboard").classList.add("hidden");
-    document.getElementById("loginPage").classList.remove("hidden");
-    document.getElementById("loginForm").reset();
-}
+  // Exact Fix for Live Status Update
+  function updateOrderStatus(docDocId, status) {
+      db.collection("orders").doc(docDocId).update({ status: status })
+        .then(() => {
+            console.log("Status updated successfully to " + status);
+        })
+        .catch((error) => {
+            alert("Error updating status: " + error.message);
+        });
+  }
 
-function showPage(page, button) {
-    ["overview", "products", "orders"].forEach(name => {
-        document.getElementById(name + "Page")
-            .classList.toggle("hidden", name !== page);
-    });
+  const money = value => "₹" + Number(value || 0).toLocaleString("en-IN");
+  
+  function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[char]));
+  }
 
-    document.querySelectorAll(".nav-btn").forEach(btn => {
-        btn.classList.remove("active");
-    });
+  function renderProducts() {
+      document.getElementById("productCount").textContent = products.length + " Products";
+      const table = document.getElementById("productTable");
+      if (!products.length) {
+          table.innerHTML = `<tr><td colspan="5" class="empty">No products yet. Add your first product above.</td></tr>`;
+          return;
+      }
+      table.innerHTML = products.map(p => `
+          <tr>
+              <td><img class="product-img" src="${escapeHTML(p.image || "https://placehold.co/100x100?text=Product")}" onerror="this.src='https://placehold.co/100x100?text=Product'"></td>
+              <td><strong>${escapeHTML(p.name)}</strong><br><span class="note">${escapeHTML(p.category)}</span></td>
+              <td>${money(p.price)}</td>
+              <td>${p.stock}</td>
+              <td>
+                  <button class="small-btn" onclick="editProduct('${escapeHTML(p.id)}')">Edit</button>
+                  <button class="small-btn delete-btn" onclick="deleteProduct('${escapeHTML(p.id)}')">Delete</button>
+              </td>
+          </tr>
+      `).join("");
+  }
 
-    if (button) button.classList.add("active");
+  function editProduct(id) {
+      const p = products.find(item => item.id === id);
+      if (!p) return;
+      document.getElementById("editProductId").value = p.id;
+      document.getElementById("productName").value = p.name;
+      document.getElementById("productCategory").value = p.category;
+      document.getElementById("productPrice").value = p.price;
+      document.getElementById("productOldPrice").value = p.oldPrice;
+      document.getElementById("productStock").value = p.stock;
+      document.getElementById("productImage").value = p.image;
+      document.getElementById("productDescription").value = p.description;
+      document.getElementById("productFormTitle").textContent = "✏️ Edit Product";
+      document.getElementById("cancelEdit").classList.remove("hidden");
+      showPageById("products");
+  }
 
-    renderAll();
-}
+  function resetProductForm() {
+      document.getElementById("productForm").reset();
+      document.getElementById("editProductId").value = "";
+      document.getElementById("productFormTitle").textContent = "➕ Add New Product";
+      document.getElementById("cancelEdit").classList.add("hidden");
+  }
 
-function showPageById(page) {
-    const button = [...document.querySelectorAll(".nav-btn")]
-        .find(btn => btn.getAttribute("onclick").includes("'" + page + "'"));
+  function renderOrders() {
+      document.getElementById("orderCount").textContent = orders.length + " Orders";
+      const table = document.getElementById("orderTable");
+      if (!orders.length) {
+          table.innerHTML = `<tr><td colspan="6" class="empty">No customer orders yet.</td></tr>`;
+          return;
+      }
+      table.innerHTML = orders.map(order => {
+          const status = order.status || "Pending";
+          const itemNames = Array.isArray(order.items) ? order.items.map(i => escapeHTML(i.name) + " × " + Number(i.quantity || 1)).join("<br>") : "Order";
+          return `
+              <tr>
+                  <td>${escapeHTML(order.id)}</td>
+                  <td>${escapeHTML(order.customer || order.name)}<br><span class="note">${escapeHTML(order.phone)}</span></td>
+                  <td>${itemNames}</td>
+                  <td>${money(order.total)}</td>
+                  <td><span class="badge status-${status.toLowerCase()}">${status}</span></td>
+                  <td>
+                      <select onchange="updateOrderStatus('${escapeHTML(order.docDocId)}', this.value)">
+                          ${["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"].map(s => `<option value="${s}" ${s === status ? "selected" : ""}>${s}</option>`).join("")}
+                      </select>
+                  </td>
+              </tr>
+          `;
+      }).join("");
+  }
 
-    showPage(page, button);
-}
+  function renderOverview() {
+      document.getElementById("statProducts").textContent = products.length;
+      document.getElementById("statOrders").textContent = orders.length;
+      const total = orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+      document.getElementById("statRevenue").textContent = money(total);
+  }
 
-document.getElementById("productForm")
-.addEventListener("submit", function(event) {
-    event.preventDefault();
+  function showPage(page, button) {
+      ["overview", "products", "orders"].forEach(name => {
+          document.getElementById(name + "Page").classList.toggle("hidden", name !== page);
+      });
+      document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.remove("active"));
+      if (button) button.classList.add("active");
+  }
 
-    const editId = document.getElementById("editProductId").value;
-
-    const product = {
-        id: editId || (
-            "P" + Date.now() + Math.random().toString(16).slice(2, 6)
-        ),
-        name: document.getElementById("productName").value.trim(),
-        category: document.getElementById("productCategory").value,
-        price: Number(document.getElementById("productPrice").value),
-        oldPrice: Number(document.getElementById("productOldPrice").value || 0),
-        stock: Number(document.getElementById("productStock").value),
-        image: document.getElementById("productImage").value.trim(),
-        description: document.getElementById("productDescription").value.trim()
-    };
-
-    if (!product.name || !product.category ||
-        !Number.isFinite(product.price) || product.price <= 0 ||
-        !Number.isInteger(product.stock) || product.stock < 0) {
-        alert("Please check the product details.");
-        return;
-    }
-
-    if (editId) {
-        products = products.map(item =>
-            item.id === editId ? product : item
-        );
-    } else {
-        products.unshift(product);
-    }
-
-    saveData(PRODUCT_KEY, products);
-    resetProductForm();
-    renderAll();
-
-    alert("Product saved in this browser's demo storage.");
-});
-
-function editProduct(id) {
-    const p = products.find(item => item.id === id);
-    if (!p) return;
-
-    document.getElementById("editProductId").value = p.id;
-    document.getElementById("productName").value = p.name;
-    document.getElementById("productCategory").value = p.category;
-    document.getElementById("productPrice").value = p.price;
-    document.getElementById("productOldPrice").value = p.oldPrice;
-    document.getElementById("productStock").value = p.stock;
-    document.getElementById("productImage").value = p.image;
-    document.getElementById("productDescription").value = p.description;
-
-    document.getElementById("productFormTitle").textContent =
-        "✏️ Edit Product";
-
-    document.getElementById("cancelEdit").classList.remove("hidden");
-
-    showPageById("products");
-
-    document.getElementById("productFormTitle")
-        .scrollIntoView({behavior: "smooth", block: "center"});
-}
-
-function deleteProduct(id) {
-    if (!confirm("Delete this demo product?")) return;
-
-    products = products.filter(p => p.id !== id);
-    saveData(PRODUCT_KEY, products);
-    renderAll();
-}
-
-function resetProductForm() {
-    document.getElementById("productForm").reset();
-    document.getElementById("editProductId").value = "";
-
-    document.getElementById("productFormTitle").textContent =
-        "➕ Add New Product";
-
-    document.getElementById("cancelEdit").classList.add("hidden");
-}
-
-function renderProducts() {
-    document.getElementById("productCount").textContent =
-        products.length + " Products";
-
-    const table = document.getElementById("productTable");
-
-    if (!products.length) {
-        table.innerHTML = `
-            <tr><td colspan="5" class="empty">
-                No demo products yet. Add your first product above.
-            </td></tr>`;
-        return;
-    }
-
-    table.innerHTML = products.map(p => `
-        <tr>
-            <td>
-                <img class="product-img"
-                    src="${escapeHTML(p.image || "https://placehold.co/100x100?text=Product")}"
-                    alt=""
-                    onerror="this.src='https://placehold.co/100x100?text=Product'">
-            </td>
-
-            <td>
-                <strong>${escapeHTML(p.name)}</strong><br>
-                <span class="note">${escapeHTML(p.category)}</span>
-            </td>
-
-            <td>${money(p.price)}</td>
-            <td>${p.stock}</td>
-
-            <td>
-                <button class="small-btn"
-                    onclick="editProduct('${escapeHTML(p.id)}')">
-                    Edit
-                </button>
-
-                <button class="small-btn delete-btn"
-                    onclick="deleteProduct('${escapeHTML(p.id)}')">
-                    Delete
-                </button>
-            </td>
-        </tr>
-    `).join("");
-}
-
-function renderOrders() {
-    document.getElementById("orderCount").textContent =
-        orders.length + " Orders";
-
-    const table = document.getElementById("orderTable");
-
-    if (!orders.length) {
-        table.innerHTML = `
-            <tr><td colspan="6" class="empty">
-                No demo orders yet.
-            </td></tr>`;
-        return;
-    }
-
-    table.innerHTML = orders.map(order => {
-        const status = order.status || "Pending";
-        const safeStatus = status.toLowerCase();
-
-        const itemNames = Array.isArray(order.items)
-            ? order.items.map(i =>
-                escapeHTML(i.name) + " × " + Number(i.quantity || 1)
-              ).join("<br>")
-            : "Demo order";
-
-        return `
-            <tr>
-                <td>${escapeHTML(order.id)}</td>
-                <td>
-                    ${escapeHTML(order.customer || "Demo Customer")}<br>
-                    <span class="note">Demo data</span>
-                </td>
-                <td>${itemNames}</td>
-                <td>${money(order.total)}</td>
-                <td>
-                    <span class="badge status-${escapeHTML(safeStatus)}">
-                        ${escapeHTML(status)}
-                    </span>
-                </td>
-                <td>
-                    <select onchange="updateOrderStatus('${escapeHTML(order.id)}', this.value)"
-                        aria-label="Change order status">
-                        ${["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"]
-                            .map(s => `
-                                <option value="${s}"
-                                    ${s === status ? "selected" : ""}>
-                                    ${s}
-                                </option>
-                            `).join("")}
-                    </select>
-                </td>
-            </tr>
-        `;
-    }).join("");
-}
-
-function updateOrderStatus(id, status) {
-    const allowed = [
-        "Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"
-    ];
-
-    if (!allowed.includes(status)) return;
-
-    orders = orders.map(order =>
-        order.id === id ? {...order, status} : order
-    );
-
-    saveData(ORDER_KEY, orders);
-    renderAll();
-}
-
-function renderOverview() {
-    document.getElementById("statProducts").textContent =
-        products.length;
-
-    document.getElementById("statOrders").textContent =
-        orders.length;
-
-    const total = orders.reduce((sum, order) =>
-        sum + Number(order.total || 0), 0
-    );
-
-    document.getElementById("statRevenue").textContent = money(total);
-}
-
-function renderAll() {
-    renderProducts();
-    renderOrders();
-    renderOverview();
-}
-
-renderAll();
+  function showPageById(page) {
+      const button = [...document.querySelectorAll(".nav-btn")].find(btn => btn.getAttribute("onclick").includes("'" + page + "'"));
+      showPage(page, button);
+  }
 </script>
 
 </body>
