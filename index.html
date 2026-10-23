@@ -553,12 +553,19 @@ th {
 
                             <div class="field">
                                 <label for="productStock">Stock Quantity *</label>
-                                <input id="productStock" type="number" min="0" max="1000000" step="1" required>
+                                <input id="productStock" type="number" min="0" max="1000000" step="1" required value="10">
                             </div>
 
                             <div class="field">
                                 <label for="productImageFile">Upload Product Image</label>
                                 <input id="productImageFile" type="file" accept="image/*">
+                            </div>
+
+                            <!-- MEESHO / AFFILIATE LINK FIELD -->
+                            <div class="field span-2">
+                                <label for="productAffiliateLink" style="color: var(--pink);">🔗 Meesho / Affiliate Product Link (Optional)</label>
+                                <input id="productAffiliateLink" type="url" placeholder="https://meesho.com/... or affiliate link">
+                                <span class="note">If added, customers clicking 'Buy Now' will be redirected directly to this affiliate link.</span>
                             </div>
 
                             <div class="field span-2">
@@ -585,7 +592,7 @@ th {
                                     <th>Image</th>
                                     <th>Product</th>
                                     <th>Price</th>
-                                    <th>Stock</th>
+                                    <th>Type</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -643,6 +650,18 @@ th {
   const auth = firebase.auth();
   const db = firebase.firestore();
 
+  // Automatic Auth State Listener
+  auth.onAuthStateChanged((user) => {
+      if (user) {
+          document.getElementById("loginPage").classList.add("hidden");
+          document.getElementById("dashboard").classList.remove("hidden");
+          loadFirestoreData();
+      } else {
+          document.getElementById("dashboard").classList.add("hidden");
+          document.getElementById("loginPage").classList.remove("hidden");
+      }
+  });
+
   // Admin Login Handler
   document.getElementById("loginForm").addEventListener("submit", function(event) {
       event.preventDefault();
@@ -652,11 +671,6 @@ th {
       document.getElementById("loginMessage").textContent = "";
 
       auth.signInWithEmailAndPassword(email, password)
-          .then(() => {
-              document.getElementById("loginPage").classList.add("hidden");
-              document.getElementById("dashboard").classList.remove("hidden");
-              loadFirestoreData();
-          })
           .catch((error) => {
               let errorMsg = "Incorrect email or password. Please try again.";
               if (error.code === 'auth/too-many-requests') {
@@ -669,8 +683,6 @@ th {
 
   function logout() {
       auth.signOut().then(() => {
-          document.getElementById("dashboard").classList.add("hidden");
-          document.getElementById("loginPage").classList.remove("hidden");
           document.getElementById("loginForm").reset();
           document.getElementById("loginMessage").innerHTML = "";
       });
@@ -705,7 +717,7 @@ th {
       });
   }
 
-  // Add/Edit Product Form Handler with File Upload support
+  // Add/Edit Product Form Handler
   document.getElementById("productForm").addEventListener("submit", async function(event) {
       event.preventDefault();
       const editId = document.getElementById("editProductId").value;
@@ -725,8 +737,9 @@ th {
           category: document.getElementById("productCategory").value,
           price: Number(document.getElementById("productPrice").value),
           oldPrice: Number(document.getElementById("productOldPrice").value || 0),
-          stock: Number(document.getElementById("productStock").value),
+          stock: Number(document.getElementById("productStock").value || 10),
           image: imageUrl || "https://placehold.co/100x100?text=Product",
+          affiliateLink: document.getElementById("productAffiliateLink").value.trim(),
           description: document.getElementById("productDescription").value.trim()
       };
 
@@ -779,18 +792,20 @@ th {
           table.innerHTML = `<tr><td colspan="5" class="empty">No products yet. Add your first product above.</td></tr>`;
           return;
       }
-      table.innerHTML = products.map(p => `
+      table.innerHTML = products.map(p => {
+          const isAffiliate = p.affiliateLink || p.meeshoLink || p.link;
+          return `
           <tr>
               <td><img class="product-img" src="${escapeHTML(p.image || "https://placehold.co/100x100?text=Product")}" onerror="this.src='https://placehold.co/100x100?text=Product'"></td>
               <td><strong>${escapeHTML(p.name)}</strong><br><span class="note">${escapeHTML(p.category)}</span></td>
               <td>${money(p.price)}</td>
-              <td>${p.stock}</td>
+              <td>${isAffiliate ? '<span class="badge" style="background:#e0f2fe; color:#0284c7;">🔗 Affiliate</span>' : '<span class="badge">Direct Store</span>'}</td>
               <td>
                   <button class="small-btn" onclick="editProduct('${escapeHTML(p.id)}')">Edit</button>
                   <button class="small-btn delete-btn" onclick="deleteProduct('${escapeHTML(p.id)}')">Delete</button>
               </td>
           </tr>
-      `).join("");
+      `}).join("");
   }
 
   function editProduct(id) {
@@ -801,9 +816,10 @@ th {
       document.getElementById("productCategory").value = p.category;
       document.getElementById("productPrice").value = p.price;
       document.getElementById("productOldPrice").value = p.oldPrice;
-      document.getElementById("productStock").value = p.stock;
+      document.getElementById("productStock").value = p.stock || 10;
       document.getElementById("productImageExisting").value = p.image || "";
-      document.getElementById("productDescription").value = p.description;
+      document.getElementById("productAffiliateLink").value = p.affiliateLink || p.meeshoLink || p.link || "";
+      document.getElementById("productDescription").value = p.description || "";
       document.getElementById("productFormTitle").textContent = "✏️ Edit Product";
       document.getElementById("cancelEdit").classList.remove("hidden");
       showPageById("products");
